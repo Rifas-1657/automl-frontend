@@ -142,7 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const loginApi = axios.create({ baseURL })
     
     console.log(`🔐 Attempting login for user: ${username}`)
-    const res = await loginApi.post('/login', form, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
+    const res = await loginApi.post('/token', form, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
     console.log(`✅ Login successful, token received: ${res.data.access_token.substring(0, 20)}...`)
     
     setToken(res.data.access_token)
