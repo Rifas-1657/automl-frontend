@@ -16,6 +16,7 @@ const Upload: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [lastFile, setLastFile] = useState<File | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const accept = '.csv,.xlsx,.xls,.json';
@@ -341,28 +342,36 @@ const Upload: React.FC = () => {
 
         {/* Preview */}
         {previewRows && previewRows.length > 0 && (
-          <div style={{ ...glass, marginTop: 16, padding: 16 }}>
-            <div style={{ color: '#e2e8f0', fontWeight: 700, marginBottom: 10 }}>File Preview (first 5 rows)</div>
-            <div className="results-scroll">
-              <table className="data-table" style={{ color: '#cbd5e1', fontSize: 13 }}>
-                <thead>
-                  <tr>
-                    {(previewHeaders || []).map((h) => (
-                      <th key={h} style={{ textAlign: 'left', padding: '8px 10px', borderBottom: '1px solid rgba(148,163,184,0.25)', color: '#e2e8f0' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {previewRows.map((row, idx) => (
-                    <tr key={idx}>
+          <div style={{ ...glass, marginTop: 16, padding: 16, position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ color: '#e2e8f0', fontWeight: 700 }}>File Preview (first 5 rows)</div>
+              <button
+                onClick={() => setShowPreview(v => !v)}
+                style={{ padding: '6px 10px', borderRadius: 10, border: '1px solid #64748b', background: 'transparent', color: '#e2e8f0', cursor: 'pointer' }}
+              >{showPreview ? 'Hide' : 'Show More'}</button>
+            </div>
+            {showPreview && (
+              <div className="results-scroll" style={{ marginTop: 10 }}>
+                <table className="data-table" style={{ color: '#cbd5e1', fontSize: 13 }}>
+                  <thead>
+                    <tr>
                       {(previewHeaders || []).map((h) => (
-                        <td key={h} style={{ padding: '8px 10px', borderBottom: '1px solid rgba(148,163,184,0.1)' }}>{String(row[h] ?? '')}</td>
+                        <th key={h} style={{ textAlign: 'left', padding: '8px 10px', borderBottom: '1px solid rgba(148,163,184,0.25)', color: '#e2e8f0' }}>{h}</th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {previewRows.map((row, idx) => (
+                      <tr key={idx}>
+                        {(previewHeaders || []).map((h) => (
+                          <td key={h} style={{ padding: '8px 10px', borderBottom: '1px solid rgba(148,163,184,0.1)' }}>{String(row[h] ?? '')}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </div>

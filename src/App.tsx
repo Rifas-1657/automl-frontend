@@ -22,7 +22,7 @@ import UploadDiagnostic from './pages/UploadDiagnostic'
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute'
-import DebugAuth from './components/DebugAuth'
+// import DebugAuth from './components/DebugAuth'
 
 function App() {
   return (
@@ -67,7 +67,7 @@ function App() {
             }}
           />
 
-          <DebugAuth />
+          {/* <DebugAuth /> */}
           
           <GlobalLoading />
           <ErrorBoundary>
