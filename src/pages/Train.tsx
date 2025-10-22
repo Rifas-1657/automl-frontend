@@ -754,22 +754,7 @@ const Train: React.FC = () => {
                   <span>Make Predictions</span>
                 </motion.button>
 
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    console.log('📊 View Charts button clicked')
-                    console.log('📊 Dataset ID:', datasetId)
-                    
-                    // Navigate to visualization page
-                    console.log('📊 Navigating to visualization page')
-                    navigate(`/visualization/${datasetId}`)
-                  }}
-                  className="flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all duration-200"
-                >
-                  <BarChart3 className="h-4 w-4" />
-                  <span>View Charts</span>
-                </motion.button>
+                {/* Visualization feature removed */}
               </div>
             </div>
           ) : (!trained ? (

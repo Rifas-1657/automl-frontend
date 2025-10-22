@@ -24,11 +24,6 @@ interface Model {
   }
 }
 
-interface VisualizationData {
-  plot_files: string[]
-  plot_urls: string[]
-}
-
 interface TrainingConfig {
   targetColumn: string
   taskType: string
@@ -45,9 +40,6 @@ interface AppState {
   recentModels: Model[]
   selectedModel: Model | null
   
-  // Visualization state
-  visualizationData: Record<number, VisualizationData> // datasetId -> visualization data
-  
   // Training configuration state
   trainingConfig: Record<number, TrainingConfig> // datasetId -> training config
   
@@ -59,15 +51,12 @@ interface AppState {
   // Loading states
   isLoadingDatasets: boolean
   isLoadingModels: boolean
-  isLoadingVisualizations: boolean
   
   // Actions
   setSelectedDataset: (dataset: Dataset | null) => void
   setAvailableDatasets: (datasets: Dataset[]) => void
   setRecentModels: (models: Model[]) => void
   setSelectedModel: (model: Model | null) => void
-  setVisualizationData: (datasetId: number, data: VisualizationData) => void
-  getVisualizationData: (datasetId: number) => VisualizationData | null
   setTrainingConfig: (datasetId: number, config: TrainingConfig) => void
   getTrainingConfig: (datasetId: number) => TrainingConfig | null
   setCanGoBack: (canGoBack: boolean) => void
@@ -75,7 +64,6 @@ interface AppState {
   setLastModelId: (modelId: string | null) => void
   setLoadingDatasets: (loading: boolean) => void
   setLoadingModels: (loading: boolean) => void
-  setLoadingVisualizations: (loading: boolean) => void
   
   // Utility functions
   getDatasetById: (id: number) => Dataset | null
@@ -91,27 +79,18 @@ const useAppStore = create<AppState>()(
       availableDatasets: [],
       recentModels: [],
       selectedModel: null,
-      visualizationData: {},
       trainingConfig: {},
       canGoBack: false,
       previousPath: null,
       lastModelId: null,
       isLoadingDatasets: false,
       isLoadingModels: false,
-      isLoadingVisualizations: false,
       
       // Actions
       setSelectedDataset: (dataset) => set({ selectedDataset: dataset }),
       setAvailableDatasets: (datasets) => set({ availableDatasets: datasets }),
       setRecentModels: (models) => set({ recentModels: models }),
       setSelectedModel: (model) => set({ selectedModel: model }),
-      setVisualizationData: (datasetId, data) => set((state) => ({
-        visualizationData: { ...state.visualizationData, [datasetId]: data }
-      })),
-      getVisualizationData: (datasetId) => {
-        const state = get()
-        return state.visualizationData[datasetId] || null
-      },
       setTrainingConfig: (datasetId, config) => set((state) => ({
         trainingConfig: { ...state.trainingConfig, [datasetId]: config }
       })),
@@ -124,7 +103,6 @@ const useAppStore = create<AppState>()(
       setLastModelId: (modelId) => set({ lastModelId: modelId }),
       setLoadingDatasets: (loading) => set({ isLoadingDatasets: loading }),
       setLoadingModels: (loading) => set({ isLoadingModels: loading }),
-      setLoadingVisualizations: (loading) => set({ isLoadingVisualizations: loading }),
       
       // Utility functions
       getDatasetById: (id) => {
@@ -142,21 +120,18 @@ const useAppStore = create<AppState>()(
         availableDatasets: [],
         recentModels: [],
         selectedModel: null,
-        visualizationData: {},
         trainingConfig: {},
         canGoBack: false,
         previousPath: null,
         lastModelId: null,
         isLoadingDatasets: false,
         isLoadingModels: false,
-        isLoadingVisualizations: false,
       }),
     }),
     {
       name: 'automl-app-store',
       partialize: (state) => ({
         selectedDataset: state.selectedDataset,
-        visualizationData: state.visualizationData,
         trainingConfig: state.trainingConfig,
         canGoBack: state.canGoBack,
         previousPath: state.previousPath,
