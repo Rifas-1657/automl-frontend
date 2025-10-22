@@ -38,7 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const api = useMemo(() => {
     // Resolve and validate base URL; fall back if invalid
-    const DEFAULT_BASE_URL = 'http://127.0.0.1:8000/api'
+    const DEFAULT_BASE_URL = 'https://web-production-8a68e.up.railway.app/api'
     let baseURLCandidate: string | undefined
     if (typeof import.meta !== 'undefined' && typeof (import.meta as any).env !== 'undefined') {
       baseURLCandidate = (import.meta as any).env.VITE_API_BASE_URL as string | undefined
@@ -137,7 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       typeof (import.meta as any).env !== 'undefined' &&
       (import.meta as any).env.VITE_API_BASE_URL
         ? (import.meta as any).env.VITE_API_BASE_URL
-        : 'http://127.0.0.1:8000/api'
+        : 'https://web-production-8a68e.up.railway.app/api'
     
     const loginApi = axios.create({ baseURL })
     
@@ -155,7 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       typeof (import.meta as any).env !== 'undefined' &&
       (import.meta as any).env.VITE_API_BASE_URL
         ? (import.meta as any).env.VITE_API_BASE_URL
-        : 'http://127.0.0.1:8000/api'
+        : 'https://web-production-8a68e.up.railway.app/api'
     
     const signupApi = axios.create({ baseURL })
     
