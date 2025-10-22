@@ -22,7 +22,11 @@ export default function Signup() {
       toast.success('Account created successfully! Welcome to AutoML!')
       navigate('/')
     } catch (err: any) {
-      toast.error(err?.response?.data?.detail || 'Signup failed')
+      const detail = err?.response?.data?.detail
+      const message = Array.isArray(detail)
+        ? detail.map((d: any) => (typeof d?.msg === 'string' ? d.msg : '')).filter(Boolean).join(', ')
+        : (typeof detail === 'string' ? detail : 'Signup failed')
+      toast.error(message)
     } finally {
       setLoading(false)
     }
@@ -95,9 +99,10 @@ export default function Signup() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
                   required
-                  minLength={6}
+                  minLength={8}
                   className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-purple-500 transition-colors"
                 />
+                <p className="mt-1 text-xs text-slate-400">Must be at least 8 characters.</p>
               </div>
             </div>
 
