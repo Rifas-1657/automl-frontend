@@ -497,8 +497,11 @@ const Predict: React.FC = () => {
                       </select>
                     ) : (
                       <input
-                        type="number"
-                        step="any"
+                        type="text"
+                        inputMode="decimal"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        spellCheck={false}
                         placeholder="Enter value"
                         onChange={(e) => handleInputChange(feature, e.target.value)}
                         className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
@@ -716,25 +719,22 @@ const Predict: React.FC = () => {
         {history.length === 0 ? (
           <div className="text-slate-400">No history yet</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-700">
-                  <th className="text-left p-2 text-slate-300">Time</th>
-                  <th className="text-left p-2 text-slate-300">Inputs</th>
-                  <th className="text-left p-2 text-slate-300">Prediction</th>
-                </tr>
-              </thead>
-              <tbody>
-                {history.map((h, i) => (
-                  <tr key={i} className="border-b border-slate-800">
-                    <td className="p-2 text-slate-400">{new Date(h.ts).toLocaleString()}</td>
-                    <td className="p-2 text-slate-400">{JSON.stringify(h.input)}</td>
-                    <td className="p-2 text-slate-200">{JSON.stringify(h.prediction)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-3">
+            {history.map((h, i) => (
+              <div key={i} className="p-3 bg-slate-700/30 rounded-lg border border-slate-700/40">
+                <div className="text-slate-400 text-xs mb-2">{new Date(h.ts).toLocaleString()}</div>
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div className="p-2 bg-slate-800/50 rounded">
+                    <div className="text-slate-300 text-xs mb-1">Inputs</div>
+                    <pre className="pre-json">{JSON.stringify(h.input, null, 2)}</pre>
+                  </div>
+                  <div className="p-2 bg-slate-800/50 rounded">
+                    <div className="text-slate-300 text-xs mb-1">Prediction</div>
+                    <pre className="pre-json">{JSON.stringify(h.prediction, null, 2)}</pre>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </motion.div>

@@ -343,8 +343,8 @@ const Upload: React.FC = () => {
         {previewRows && previewRows.length > 0 && (
           <div style={{ ...glass, marginTop: 16, padding: 16 }}>
             <div style={{ color: '#e2e8f0', fontWeight: 700, marginBottom: 10 }}>File Preview (first 5 rows)</div>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', color: '#cbd5e1', fontSize: 13 }}>
+            <div className="results-scroll">
+              <table className="data-table" style={{ color: '#cbd5e1', fontSize: 13 }}>
                 <thead>
                   <tr>
                     {(previewHeaders || []).map((h) => (
