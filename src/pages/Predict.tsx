@@ -52,7 +52,8 @@ const Predict: React.FC = () => {
   const [outputIsNumeric, setOutputIsNumeric] = useState<boolean | null>(null)
   const debounceRef = useRef<number | undefined>(undefined)
   const [batchRows, setBatchRows] = useState<any[]>([])
-  const [batchResults, setBatchResults] = useState<Array<{ prediction: number, confidence?: number }>>([])
+  const [batchResults, setBatchResults] = useState<Array<{ prediction: number | string | null, confidence?: number }>>([])
+  const [batchErrors, setBatchErrors] = useState<string[]>([])
   const [batchProgress, setBatchProgress] = useState<number>(0)
   const [batchRunning, setBatchRunning] = useState<boolean>(false)
   const [history, setHistory] = useState<Array<{ ts: string, input: Record<string, any>, prediction: any }>>([])
@@ -296,7 +297,11 @@ const Predict: React.FC = () => {
     for (let i = 1; i < lines.length; i++) {
       const vals = lines[i].split(',')
       const obj: Record<string, any> = {}
-      headers.forEach((h, idx) => { const v = vals[idx] ?? ''; obj[h] = isNaN(Number(v)) ? v : Number(v) })
+      headers.forEach((h, idx) => {
+        // Keep raw strings to avoid unintended coercion; backend handles numeric casting
+        const v = (vals[idx] ?? '').trim()
+        obj[h] = v
+      })
       rows.push(obj)
     }
     return rows
@@ -309,6 +314,7 @@ const Predict: React.FC = () => {
       if (rows.length === 0) { toast.error('CSV is empty or invalid'); return }
       setBatchRows(rows)
       setBatchResults([])
+      setBatchErrors([])
       setBatchProgress(0)
     } catch { toast.error('Failed to parse CSV') } finally { if (e.target) e.target.value = '' }
   }
@@ -316,15 +322,55 @@ const Predict: React.FC = () => {
   const runBatchPredictions = async () => {
     if (batchRows.length === 0) { toast.error('No CSV rows to predict'); return }
     setBatchRunning(true)
-    const results: Array<{ prediction: number, confidence?: number }> = []
+    const results: Array<{ prediction: number | string | null, confidence?: number }> = []
+    const errors: string[] = []
     for (let i = 0; i < batchRows.length; i++) {
       try {
-        const { data } = await api.post(`/predict/${datasetId}`, { dataset_id: parseInt(datasetId!), input_features: batchRows[i] })
-        results.push({ prediction: data.prediction, confidence: data.confidence })
-      } catch { results.push({ prediction: NaN }) }
+        // Sanitize row to expected features if known
+        let payload: Record<string, any> = {}
+        const row = batchRows[i]
+        if (Array.isArray(expectedFeatures) && expectedFeatures.length > 0) {
+          expectedFeatures.forEach((f) => {
+            let v = row[f]
+            if (v === undefined || v === '') v = null
+            payload[f] = v
+          })
+        } else {
+          payload = { ...row }
+        }
+        // Optional client-side categorical check to avoid 400s
+        let invalidMsg: string | null = null
+        Object.keys(categoricalOptions || {}).forEach((col) => {
+          if (payload[col] === null || payload[col] === undefined || payload[col] === '') return
+          const allowed = categoricalOptions[col]
+          const valS = String(payload[col])
+          if (allowed && !allowed.includes(valS)) {
+            invalidMsg = `Row ${i + 1}: invalid ${col}='${valS}'. Allowed: ${allowed.join(', ')}`
+          }
+        })
+        if (invalidMsg) {
+          errors.push(invalidMsg)
+          results.push({ prediction: null })
+        } else {
+          const { data } = await api.post(`/predict/${datasetId}`, { dataset_id: parseInt(datasetId!), input_features: payload })
+          results.push({ prediction: data.prediction, confidence: data.confidence })
+          errors.push('')
+        }
+      } catch (err: any) {
+        // Capture server-side detail to help fix NAN cases
+        let msg = ''
+        const detail = err?.response?.data?.detail
+        if (typeof detail === 'string') msg = detail
+        else if (detail?.type === 'invalid_categorical_value') {
+          try { msg = (detail.invalid || []).map((d: any) => `${d.column}='${d.value}'`).join('; ') } catch {}
+        }
+        results.push({ prediction: null })
+        errors.push(msg || 'prediction failed')
+      }
       setBatchProgress(Math.round(((i + 1) * 100) / batchRows.length))
     }
     setBatchResults(results)
+    setBatchErrors(errors)
     setBatchRunning(false)
   }
 
@@ -685,21 +731,23 @@ const Predict: React.FC = () => {
               </div>
             )}
             {batchResults.length > 0 && (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+              <div className="results-scroll">
+                <table className="data-table text-sm">
                   <thead>
                     <tr className="border-b border-slate-700">
                       {Object.keys(batchRows[0]).map(h => (<th key={h} className="text-left p-2 text-slate-300">{h}</th>))}
                       <th className="text-left p-2 text-slate-300">prediction</th>
                       <th className="text-left p-2 text-slate-300">confidence</th>
+                      <th className="text-left p-2 text-slate-300">error</th>
                     </tr>
                   </thead>
                   <tbody>
                     {batchRows.map((row, idx) => (
                       <tr key={idx} className="border-b border-slate-800">
                         {Object.keys(batchRows[0]).map(h => (<td key={h} className="p-2 text-slate-400">{String(row[h] ?? '')}</td>))}
-                        <td className="p-2 text-slate-200">{String(batchResults[idx]?.prediction ?? '')}</td>
+                        <td className="p-2 text-slate-200">{batchResults[idx]?.prediction !== null && batchResults[idx]?.prediction !== undefined ? String(batchResults[idx]?.prediction) : ''}</td>
                         <td className="p-2 text-slate-200">{batchResults[idx]?.confidence !== undefined ? String(batchResults[idx]?.confidence) : ''}</td>
+                        <td className="p-2 text-red-300 text-xs">{batchErrors[idx] || ''}</td>
                       </tr>
                     ))}
                   </tbody>
