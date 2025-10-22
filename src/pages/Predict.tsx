@@ -47,7 +47,8 @@ const Predict: React.FC = () => {
   const [categoricalOptions, setCategoricalOptions] = useState<Record<string, string[]>>({})
   const [errors, setErrors] = useState<string>('')
   const [taskType, setTaskType] = useState<string>('')
-  const [autoPredict, setAutoPredict] = useState<boolean>(true)
+  // Disable auto-predict to avoid auto-correction while typing
+  const [autoPredict, setAutoPredict] = useState<boolean>(false)
   const [outputIsNumeric, setOutputIsNumeric] = useState<boolean | null>(null)
   const debounceRef = useRef<number | undefined>(undefined)
   const [batchRows, setBatchRows] = useState<any[]>([])
@@ -182,9 +183,10 @@ const Predict: React.FC = () => {
 
   const handleInputChange = (key: string, value: string) => {
     const isCategorical = !!categoricalOptions[key]
+    // Do not auto-convert typed values; send exactly what the user typed for non-categorical too
     setInputFeatures(prev => ({
       ...prev,
-      [key]: isCategorical ? value : (isNaN(Number(value)) ? value : Number(value))
+      [key]: isCategorical ? value : value
     }))
     setErrors('')
     if (autoPredict) {
@@ -228,42 +230,20 @@ const Predict: React.FC = () => {
     const err = validateInputs()
     if (err) { setErrors(err); toast.error(err); return }
     
-    // Validate input values for realism
+    // Only validate categorical against known allowed values; do not coerce or constrain numeric ranges
     const validationErrors: string[] = []
     for (const [key, value] of Object.entries(inputFeatures)) {
-      const isCategorical = !!categoricalOptions[key]
-      if (isCategorical) {
+      if (!!categoricalOptions[key]) {
         const allowed = categoricalOptions[key]
         const v = String(value)
         if (!allowed.includes(v)) {
           validationErrors.push(`Invalid value for ${key}. Allowed: ${allowed.join(', ')}`)
         }
-        continue
-      }
-      const numValue = parseFloat(value as any)
-      if (isNaN(numValue)) { validationErrors.push(`${key} must be a number`); continue }
-      
-      // Realistic value checks
-      if (key.toLowerCase().includes('bedroom') && (numValue < 0 || numValue > 20)) {
-        validationErrors.push(`${key} should be between 0 and 20`)
-      }
-      if (key.toLowerCase().includes('bathroom') && (numValue < 0 || numValue > 10)) {
-        validationErrors.push(`${key} should be between 0 and 10`)
-      }
-      if (key.toLowerCase().includes('floor') && (numValue < 0 || numValue > 10)) {
-        validationErrors.push(`${key} should be between 0 and 10`)
-      }
-      if (key.toLowerCase().includes('year') && (numValue < 1800 || numValue > 2025)) {
-        validationErrors.push(`${key} should be between 1800 and 2025`)
-      }
-      if (key.toLowerCase().includes('area') && (numValue < 0 || numValue > 10000)) {
-        validationErrors.push(`${key} should be between 0 and 10000`)
       }
     }
-    
     if (validationErrors.length > 0) {
       setErrors(validationErrors.join(', '))
-      toast.error('Please enter realistic values: ' + validationErrors.join(', '))
+      toast.error(validationErrors.join(', '))
       return
     }
     
@@ -624,6 +604,36 @@ const Predict: React.FC = () => {
                   {prediction.algorithm_used}
                 </div>
               </div>
+
+              {(prediction.metrics || prediction.cross_validation_score) && (
+                <div className="p-4 bg-slate-700/30 rounded-lg">
+                  <div className="text-slate-300 text-sm mb-2">Model Metrics</div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm results-table">
+                      <tbody>
+                        {prediction.metrics && Object.entries(prediction.metrics).map(([k,v]: any) => (
+                          <tr key={k} className="border-b border-slate-700/40">
+                            <td className="p-2 text-slate-400 whitespace-nowrap">{k}</td>
+                            <td className="p-2 text-white">{typeof v === 'number' ? v.toFixed(4) : String(v)}</td>
+                          </tr>
+                        ))}
+                        {prediction.cross_validation_score && (
+                          <tr>
+                            <td className="p-2 text-slate-400 whitespace-nowrap">cv_mean ± cv_std</td>
+                            <td className="p-2 text-white">
+                              {(() => {
+                                const m = prediction.cross_validation_score?.mean
+                                const s = prediction.cross_validation_score?.std
+                                return [m, s].every((x: any) => typeof x === 'number') ? `${m.toFixed(4)} ± ${s.toFixed(4)}` : ''
+                              })()}
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
 
               <div className="p-4 bg-slate-700/30 rounded-lg">
                 <div className="text-slate-300 text-sm mb-2">Input Features</div>

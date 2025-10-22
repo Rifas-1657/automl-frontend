@@ -450,20 +450,20 @@ const Analyze: React.FC = () => {
                 <Database className="h-6 w-6 text-blue-400" />
                 <h3 className="text-lg font-semibold text-white">Data Preview</h3>
               </div>
-              <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
-                <table className="min-w-max text-sm data-table">
+              <div className="overflow-x-auto max-w-full" style={{ WebkitOverflowScrolling: 'touch' }}>
+                <table className="w-full text-sm data-table" style={{ tableLayout: 'fixed' }}>
                   <thead>
                     <tr className="border-b border-slate-600">
-                      {dataset.columns?.slice(0, 10).map((col, idx) => (
-                        <th key={idx} className="text-left p-2 text-slate-300 whitespace-nowrap">{col}</th>
+                      {dataset.columns?.map((col, idx) => (
+                        <th key={idx} className="text-left p-2 text-slate-300 whitespace-nowrap min-w-[160px]">{col}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {dataset.data_preview?.slice(0, 5).map((row, idx) => (
+                    {dataset.data_preview?.slice(0, 10).map((row, idx) => (
                       <tr key={idx} className="border-b border-slate-700/50">
-                        {dataset.columns?.slice(0, 10).map((col, colIdx) => (
-                          <td key={colIdx} className="p-2 text-slate-400 whitespace-nowrap">
+                        {dataset.columns?.map((col, colIdx) => (
+                          <td key={colIdx} className="p-2 text-slate-400 whitespace-nowrap min-w-[160px]">
                             {row[col]?.toString() || 'N/A'}
                           </td>
                         ))}
