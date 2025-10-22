@@ -21,7 +21,11 @@ export default function Login() {
       toast.success('Welcome to AutoML!')
       navigate('/')
     } catch (err: any) {
-      toast.error(err?.response?.data?.detail || 'Login failed')
+      const detail = err?.response?.data?.detail
+      const message = Array.isArray(detail)
+        ? detail.map((d: any) => (typeof d?.msg === 'string' ? d.msg : '')).filter(Boolean).join(', ')
+        : (typeof detail === 'string' ? detail : 'Login failed')
+      toast.error(message)
     } finally {
       setLoading(false)
     }
